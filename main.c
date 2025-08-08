@@ -6,17 +6,52 @@
 
 #define MAX_INPUT 100
 
-void print_current_directory()
+static int read_line(char *buf, size_t n)
 {
-    char buffer[MAX_PATH];
-    DWORD length = GetCurrentDirectory(MAX_PATH, buffer);
-    if (length == 0)
+    if (!fgets(buf, (int)n, stdin))
+        return 0;
+
+    size_t len = strlen(buf);
+    if (len && buf[len - 1] == '\n')
+        buf[len - 1] = '\0';
+    return 1;
+}
+
+static int read_int(const char *prompt, int *out)
+{
+    char line[128];
+    for (;;)
     {
-        printf("Failed to get current directory.\n");
+        printf("%s", prompt);
+        if (!read_line(line, sizeof line))
+            return 0;
+        char *end = NULL;
+        long v = strtol(line, &end, 10);
+        if (end != line && *end == '\0')
+        {
+            *out = (int)v;
+            return 1;
+        }
+        printf("Invalid integer. Try again.\n");
     }
-    else
+}
+
+static int read_float(const char *prompt, float *out)
+{
+    char line[128];
+    for (;;)
     {
-        printf("Current directory: %s\n", buffer);
+        printf("%s", prompt);
+        if (!read_line(line, sizeof line))
+            return 0;
+        char *end = NULL;
+        float v = strtof(line, &end);
+        if (end != line && *end == '\0')
+        {
+            *out = v;
+            return 1;
+        }
+        printf("Invalid number. Try again.\n");
     }
 }
 
@@ -33,13 +68,18 @@ int main()
         printf("\n--- Sensor Analyzer Menu ---\n");
         printf("1. Add new sensor\n");
         printf("2. View all sensors\n");
-        printf("3. Save sensors to file\n");
-        printf("4. Load sensors from file\n");
+        printf("3. Save sensors to file (binary)\n");
+        printf("4. Load sensors from file (binary)\n");
         printf("5. Exit\n");
-        printf("Choose an option: ");
+        printf("6. Show averages\n");
 
         int choice;
-        scanf("%d", &choice);
+        if (!read_int("Choose an option: ", &choice))
+        {
+            printf("Input error.\n");
+            break;
+        }
+
         switch (choice)
         {
         case 1:
@@ -53,10 +93,10 @@ int main()
                     return 1;
                 }
             }
-            printf("  Enter temperature: ");
-            scanf("%f", &data[count].temperature);
-            printf("  Enter humidity: ");
-            scanf("%f", &data[count].humidity);
+            if (!read_float("  Enter temperature: ", &data[count].temperature))
+                break;
+            if (!read_float("  Enter humidity: ", &data[count].humidity))
+                break;
             update_flags(&data[count]);
             count++;
             break; // ✅ Add this
