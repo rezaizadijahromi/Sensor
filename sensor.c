@@ -7,6 +7,14 @@
 
 #include "sensor.h"
 
+int fpeek(FILE *f)
+{
+    int c = fgetc(f);
+    if (c != EOF)
+        ungetc(c, f);
+    return c;
+}
+
 float calculate_average_temperature(SensorData *data, int count)
 {
     float sum = 0.0;

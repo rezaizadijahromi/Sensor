@@ -3,13 +3,60 @@
 #include <windows.h>
 
 #include "sensor.h"
-#include "helper.h"
 
 #define MAX_INPUT 100
 
+static int read_line(char *buf, size_t n)
+{
+    if (!fgets(buf, (int)n, stdin))
+        return 0;
+
+    size_t len = strlen(buf);
+    if (len && buf[len - 1] == '\n')
+        buf[len - 1] = '\0';
+    return 1;
+}
+
+static int read_int(const char *prompt, int *out)
+{
+    char line[128];
+    for (;;)
+    {
+        printf("%s", prompt);
+        if (!read_line(line, sizeof line))
+            return 0;
+        char *end = NULL;
+        long v = strtol(line, &end, 10);
+        if (end != line && *end == '\0')
+        {
+            *out = (int)v;
+            return 1;
+        }
+        printf("Invalid integer. Try again.\n");
+    }
+}
+
+static int read_float(const char *prompt, float *out)
+{
+    char line[128];
+    for (;;)
+    {
+        printf("%s", prompt);
+        if (!read_line(line, sizeof line))
+            return 0;
+        char *end = NULL;
+        float v = strtof(line, &end);
+        if (end != line && *end == '\0')
+        {
+            *out = v;
+            return 1;
+        }
+        printf("Invalid number. Try again.\n");
+    }
+}
+
 int main()
 {
-    print_current_directory();
     SensorData *data = NULL;
     int count = 0;
     int capacity = 0;
@@ -24,6 +71,8 @@ int main()
         printf("4. Load sensors from file (binary)\n");
         printf("5. Exit\n");
         printf("6. Show averages\n");
+        printf("7. Save sensors to file (CSV)\n");
+        printf("8. Load sensors from file (CSV)\n");
 
         int choice;
         if (!read_int("Choose an option: ", &choice))
@@ -81,6 +130,14 @@ int main()
 
         case 5:
             running = 0;
+            break;
+
+        case 7:
+            save_to_csv("sensor_data.csv", data, count);
+            break;
+
+        case 8:
+            load_from_csv("sensor_data.csv", &data, &count, &capacity);
             break;
 
         default:
