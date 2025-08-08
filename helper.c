@@ -48,3 +48,11 @@ static int read_float(const char *prompt, float *out)
         printf("Invalid number. Try again.\n");
     }
 }
+
+int fpeek(FILE *f)
+{
+    int c = fgetc(f);
+    if (c != EOF)
+        ungetc(c, f);
+    return c;
+}
