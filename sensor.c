@@ -132,3 +132,92 @@ void load_from_file(const char *filename, SensorData **data, int *count, int *ca
     fclose(f);
     printf("Loaded %d sensors from %s\n", *count, filename);
 }
+
+int save_to_csv(const char *filename, const SensorData *data, int count)
+{
+    FILE *f = fopen(filename, "w");
+    if (!f)
+    {
+        printf("Failed to open CSV for writing.\n");
+    }
+
+    fprintf(f, "count,%d\n", count);
+    fprintf(f, "index,temperature,humidity,overheat,dry\n");
+
+    for (int i = 0; i < count; i++)
+    {
+        fprintf(f, "%d,%.2f,%.2f,%u,%u\n",
+                i, data[i].temperature,
+                data[i].humidity,
+                (unsigned)data[i].status.overheat,
+                (unsigned)data[i].status.dry);
+    }
+
+    fclose(f);
+    printf("saved %d sensors to %s (CSV)\n", count, filename);
+    return 1;
+}
+
+int load_from_csv(const char *filename, SensorData **data, int *count, int *capacity)
+{
+    FILE *f = fopen(filename, "r");
+    if (!f)
+    {
+        printf("Failed to open csv for reading.\n");
+        return 0;
+    }
+
+    int n = 0;
+    if (fscanf(f, "count,%d\n", &n) != 1 || n < 0 || n > 100000)
+    {
+        printf("Bad CSV header.\n");
+        fclose(f);
+        return 0;
+    }
+
+    if (*capacity < n)
+    {
+        *capacity = n;
+        SensorData *tmp = realloc(*data, (*capacity) * sizeof(SensorData));
+        if (!tmp)
+        {
+            printf("Memory allocation failed.\n");
+            fclose(f);
+            return 0;
+        }
+
+        *data = tmp;
+    }
+
+    int c = fpeek(f);
+    if (c == 'i')
+    {
+        int ch;
+        while ((ch = fgetc(f)) != EOF && ch != '\n')
+        {
+        }
+    }
+    for (int i = 0; i < n; i++)
+    {
+        int idx = 0, oh = 0, dr = 0;
+        float t = 0.f, h = 0.f;
+
+        int parsed = fscanf(f, "%d,%f,%f,%d,%d\n", &idx, &t, &h, &oh, &dr);
+        if (parsed != 5)
+        {
+            printf("CSV parse error at row %d.\n", i);
+            fclose(f);
+            return 0;
+        }
+
+        (*data)[i].temperature = t;
+        (*data)[i].humidity = h;
+        (*data)[i].status.overheat = (unsigned)oh & 1u;
+        (*data)[i].status.dry = (unsigned)dr & 1u;
+    }
+
+    *count = n;
+    fclose(f);
+    printf("Loaded %d sensors from %s (CSV)\n", *count, filename);
+    return 1;
+}
