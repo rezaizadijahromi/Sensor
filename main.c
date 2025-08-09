@@ -69,10 +69,10 @@ int main()
         printf("2. View all sensors\n");
         printf("3. Save sensors to file (binary)\n");
         printf("4. Load sensors from file (binary)\n");
-        printf("5. Exit\n");
-        printf("6. Show averages\n");
-        printf("7. Save sensors to file (CSV)\n");
-        printf("8. Load sensors from file (CSV)\n");
+        printf("5. Show averages\n");
+        printf("6. Save sensors to file (CSV)\n");
+        printf("7. Load sensors from file (CSV)\n");
+        printf("8. Exit\n");
 
         int choice;
         if (!read_int("Choose an option: ", &choice))
@@ -125,19 +125,32 @@ int main()
         case 4:
             printf("Trying to load from sensor_data.txt...\n");
             load_from_file("sensor_data.txt", &data, &count, &capacity);
-            printf("Load completed.\n");
+            printf("Logccad completed.\n");
             break;
-
         case 5:
-            running = 0;
+            if (count == 0)
+            {
+                printf("No data yet.\n");
+            }
+            else
+            {
+                float avg_t = calculate_average_temperature(data, count);
+                float avg_h = calculate_average_humidity(data, count);
+                printf("Average Temp: %.2f°C\n", avg_t);
+                printf("Average Humidity: %.2f%%\n", avg_h);
+            }
             break;
 
-        case 7:
+        case 6:
             save_to_csv("sensor_data.csv", data, count);
             break;
 
-        case 8:
+        case 7:
             load_from_csv("sensor_data.csv", &data, &count, &capacity);
+            break;
+
+        case 8:
+            running = 0;
             break;
 
         default:
